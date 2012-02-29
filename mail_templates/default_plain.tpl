@@ -1,0 +1,3 @@
+{$subject}
+
+{$alt_content}

@@ -1,0 +1,25 @@
+RewriteEngine on
+
+RewriteRule ^(pma/?.*)$ $1 [L]
+
+RewriteRule ^img/(.*)$ webroot/img/$1
+RewriteRule ^files/(.*)$ webroot/files/$1
+
+RewriteRule ^(.*?)/$ ?module=$1 [L]
+
+RewriteRule ^js/(.*)/(.*?\.js)$ modules/$1/_js/$2 [L]
+RewriteRule ^js/(.*?\.js)$ modules/_js/$1 [L]
+
+RewriteRule ^css/(.*)/(.*?\.css)$ modules/$1/_css/$2 [L]
+RewriteRule ^css/(.*?\.css)$ modules/_css/$1 [L]
+
+
+
+Options -Indexes
+
+<IfModule mod_expires.c>
+	ExpiresActive On
+	ExpiresByType text/css "access plus 1 year"
+	ExpiresByType application/javascript "access plus 1 year"
+	ExpiresByType image/* "access plus 1 hour"
+</IfModule>

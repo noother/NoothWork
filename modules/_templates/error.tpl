@@ -1,0 +1,1 @@
+An error ocurred: {$error}
