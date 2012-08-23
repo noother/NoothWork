@@ -2,6 +2,7 @@
 /*
     NoothWork - minimal website framework with focus on high performance 
     Copyright (C) 2007-2012  "noother" - noothy@gmail.com
+    Kudos to Joscha Prasse (jp@php-pixel.de) for working out many ideas with me
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
