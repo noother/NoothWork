@@ -1,6 +1,6 @@
 <?php
 
-class Module {
+abstract class Module {
 	
 	
 	public $params;
@@ -12,6 +12,7 @@ class Module {
 	protected $crossModules;
 	protected $memcache;
 	protected $modulePath;
+	protected $models = array();
 	
 	public $level;
 	
@@ -37,6 +38,16 @@ class Module {
 		$this->smarty->assign('loggedin',$this->isLoggedIn());
 		
 		$this->memcache = $framework->memcache;
+		
+		foreach($this->models as $modelname) {
+			$property_name = $modelname.'Model';
+			if(isset($this->$property_name)) {
+				trigger_error("Couldn't autoload model ".$modelname." because property ".$property_name." would be overwritten");
+				return false;
+			}
+			
+			$this->$property_name = $this->loadModel($modelname);
+		}
 		
 		if(!isset($this->level)) {
 			$this->level = $framework->CONFIG['default_level'];
@@ -66,6 +77,8 @@ class Module {
 		if(!is_array($params)) return $this->framework->showElement($element);
 		return $this->framework->showElement($params['element'],$params);
 	}
+	
+	function loadModel($modelname) { return $this->framework->loadModel($modelname); }
 	
 	function redirect($url) { return $this->framework->redirect($url); }
 

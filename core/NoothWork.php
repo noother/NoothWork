@@ -24,6 +24,7 @@ require_once('smarty/functions.php');
 require_once('smarty/modifiers.php');
 
 require_once('core/functions.php');
+require_once('core/Model.php');
 require_once('core/Module.php');
 require_once('core/Element.php');
 
@@ -169,6 +170,18 @@ class NoothWork {
 				echo '</div>';
 			}
 		}
+	}
+	
+	function loadModel($modelname) {
+		$filename = 'models/'.$modelname.'Model.php';
+		if(!file_exists($filename)) {
+			trigger_error($filename.' doesn\'t exist.');
+			return false;
+		}
+		require_once($filename);
+		
+		$classname = $modelname.'Model';
+	return new $classname($this);
 	}
 	
 	

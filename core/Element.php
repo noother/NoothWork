@@ -10,6 +10,7 @@ class Element {
 	protected $memcache;
 	protected $data;
 	protected $params;
+	protected $models = array();
 	
 	function Element($framework,$data=null) {
 		$this->framework = $framework;
@@ -24,6 +25,17 @@ class Element {
 		$this->smarty->assign('loggedin',$this->isLoggedIn());									 
 											 
 		$this->memcache = $framework->memcache;
+		
+		foreach($this->models as $modelname) {
+			$property_name = $modelname.'Model';
+			if(isset($this->$property_name)) {
+				trigger_error("Couldn't autoload model ".$modelname." because property ".$property_name." would be overwritten");
+				return false;
+			}
+			
+			$this->$property_name = $this->loadModel($modelname);
+		}
+		
 		if(isset($data)) $this->data = $data;
 		$this->index();
 		$this->framework->restoreSmarty();
