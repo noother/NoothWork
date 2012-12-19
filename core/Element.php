@@ -41,6 +41,8 @@ class Element {
 		$this->framework->restoreSmarty();
 	}
 	
+	function loadModel($modelname) { return $this->framework->loadModel($modelname); }
+	
 	function isLoggedIn() { return $this->framework->isLoggedIn(); }
 	
 	function setTitle($string) { $this->framework->setTitle($string); }
