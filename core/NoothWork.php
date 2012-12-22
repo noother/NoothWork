@@ -186,8 +186,10 @@ class NoothWork {
 	
 	
 	function loadModule($module=null,$isCrossModule=false) {
-		if($module{0} == '/')         $module = substr($module, 1);
-		if(substr($module,-1) == '/') $module = substr($module, 0, -1);
+		if(isset($module)) {
+			if($module[0] == '/')         $module = substr($module,1);
+			if(substr($module,-1) == '/') $module = substr($module,0,-1);
+		}
 		
 		if(!$this->consoleMode && $this->CONFIG['maintenance']) {
 			$module = 'Static';
@@ -202,11 +204,11 @@ class NoothWork {
 					unset($_GET['module']);
 				}
 				else $module = $this->CONFIG['default_module'];
-				
-				if($this->prefix) {
-					$module = $this->prefix.'/'.$module;
-				}
 			}
+		}
+		
+		if($this->prefix) {
+			$module = $this->prefix.'/'.$module;
 		}
 		
 		if(!$this->prepareModule($module,$isCrossModule)) {
@@ -250,23 +252,20 @@ class NoothWork {
 		$path = 'modules/';
 		
 		require_once('modules/GlobalModule.php');
+		
 		for($x=0;$x<sizeof($module_arr);$x++) {
-			if(!preg_match('/[A-Z]/',$module_arr[$x]{0})) break; // if it is a parameter
+			if(!ctype_upper($module_arr[$x]{0})) break; // if it is a parameter
 			
-			$module_name = $module_arr[$x];
-			if($this->prefix && $x != 0) {
-				if($isCrossModule) {
-					$module_name = $module_arr[0].$module_name;
-				} else {
-					$module_name = $this->prefix.$module_name;
-				}
-			}
-			$module_name.= 'Module';
 			$path.= strtolower($module_arr[$x]).'/';
 			
-			if(!file_exists($path.$module_name.'.php')) return false;
-			require_once($path.$module_name.'.php');
-			$classname = $module_name;
+			$classname = $module_arr[$x].'Module';
+			$file      = $path.$classname.'.php';
+			
+			if(!file_exists($file)){
+				return false;
+			}
+			
+			require_once($file);
 		}
 		
 		if(!isset($classname)) return false;
