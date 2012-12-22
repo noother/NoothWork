@@ -416,7 +416,7 @@ class NoothWork {
 		
 		while(!feof($fp)) {
 			$row = trim(fgets($fp));
-			if(preg_match('/^([a-zA-Z0-9_.\*-]+?)\s+=\s+(.+)$/i',$row,$arr)) {
+			if(preg_match('/^([a-zA-Z0-9_.\*-:]+?)\s+=\s+(.+)$/i',$row,$arr)) {
 				$array[$arr[1]] = $arr[2];
 			}
 		}
@@ -445,42 +445,74 @@ class NoothWork {
 	}
 	
 	function loadPrefix() {
-		$prefixes = $this->parseConfigFile('config/prefixes.conf');
+		$rules = $this->parseConfigFile('config/prefixes.conf');
 		
-		if($this->consoleMode) {
-			$tmp = explode('/',$_GET['module']);
-			if(array_search($tmp[0], $prefixes) === false) {
-				return false;
-			}
+		foreach($rules as $rule => $prefix) {
+			$rule_parts = explode(':', $rule);
 			
-			$this->prefix = $tmp[0];
-			array_shift($tmp);
-			$_GET['module'] = implode('/',$tmp);
-			
-			return true;
-		}
-		
-		$theprefix = false;
-		
-		foreach($prefixes as $domain => $prefix) {
-			$regex = preg_quote($domain);
-			
-			$regex = '/^'.str_replace('\*','.*?',$regex).'$/';
-			if(preg_match($regex,$_SERVER['HTTP_HOST'])) {
-				if($prefix[0] == '/') $prefix = substr($prefix,1);
-				if(substr($prefix,-1) == '/') $prefix = substr($prefix,0,-1);
-				$theprefix = $prefix;
+			switch($rule_parts[0]) {
+				case 'default':
+					$this->prefix = $prefix;
+				break;
+				
+				case 'domain':
+					$regex = preg_quote($rule_parts[1]);
+					$regex = '/^'.str_replace('\*','.*?',$regex).'$/';
+					
+					if(preg_match($regex, $_SERVER['HTTP_HOST'])) {
+						$this->prefix = $prefix;
+						break 2;
+					}
+				break;
+				
+				case 'subdomain':
+					$regex = preg_quote($rule_parts[1]);
+					$regex = '/^'.str_replace('\*','[^\.]*?',$regex).'\./';
+					
+					if(preg_match($regex, $_SERVER['HTTP_HOST'])) {
+						$this->prefix = $prefix;
+						break 2;
+					}
+				break;
+				
+				case 'device':
+					require_once('vendors/Mobile-Detect/Mobile_Detect.php');
+					if(!isset($MobileDetect)) $MobileDetect = new Mobile_Detect;
+					
+					switch($rule_parts[1]) {
+						case 'computer':
+							if(!$MobileDetect->isMobile() && !$MobileDetect->isTablet()) {
+								$this->prefix = $prefix;
+								break 3;
+							}
+						break;
+						case 'mobile':
+							if($MobileDetect->isMobile()) {
+								$this->prefix = $prefix;
+								break 3;
+							}
+						break;
+						case 'tablet':
+							if($MobileDetect->isTablet()) {
+								$this->prefix = $prefix;
+								break 3;
+							}
+						break;
+						default:
+							trigger_error('Unsupported device type ('.htmlspecialchars($rule_parts[1]).') set in prefixes.conf', E_USER_NOTICE);
+						break;
+					}
+					
 				break;
 			}
 		}
 		
-		if($theprefix) {
-			$this->prefix = $theprefix;
-		} else {
-			$this->prefix = $prefixes[$this->CONFIG['domain']];
+		if(!$this->prefix) {
+			trigger_error('Prefixes are used but no matching prefix was found.', E_USER_ERROR);
 		}
-	
-	return true;
+		
+		if($this->prefix{0} == '/') $this->prefix = substr($this->prefix,1);
+		if(substr($this->prefix,-1) == '/') $this->prefix = substr($this->prefix,0,-1);
 	}
 	
 	function redirect($url,$keep_alive=false) {
